@@ -55,8 +55,8 @@ function parseData() {
     "<th>Dexterity</th>" +
     "<th>Defense</th>" +
     "<th>Total</th>" +
-    "<th>Dexterity<br>(1 in 6 attacks hit you)</th>" +
-    "<th>Defense<br>(You take 0 damage)</th>" +
+    "<th>Dexterity (1 in 6 attacks hit you)</th>" +
+    "<th>Defense (You take 0 damage)</th>" +
     "</tr></thead>" +
     "<tbody>" +
     tableData
@@ -129,4 +129,27 @@ function sortTable() {
   });
   table.replaceChild(tbody, table.tBodies[0]);
   replaceZerosWithNA();
+}
+
+function exportTableToCSV() {
+  const filename = "export-" + new Date().toLocaleDateString() + ".csv";
+  const rows = document.querySelectorAll("table tr");
+
+  // Replace comma with empty string to avoid issues with numbers greater than 999
+  const sanitizeCell = (cell) => cell.innerText.replaceAll(",", "");
+
+  let csvContent = "data:text/csv;charset=utf-8,";
+
+  rows.forEach((row) => {
+    const rowData = Array.from(row.cells).map(sanitizeCell).join(",");
+    csvContent += rowData + "\r\n";
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", filename);
+  document.body.appendChild(link); // Required for FF
+
+  link.click(); // This will download the data file named "export-<date>.csv".
 }
