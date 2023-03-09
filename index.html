@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Parse Data</title>
+    <script>
+      function parseData() {
+        // Get the input data from the textarea element
+        var inputData = document.getElementById("data-input").value;
+        
+        // Split the input data into individual sections based on the "Name:" header
+        var sections = inputData.split("Name:");
+        
+        // Remove the first empty section
+        sections.shift();
+        
+        // Create an empty table to hold the parsed data
+        var tableData = [];
+        
+        // Loop through each section and parse the data
+        for (var i = 0; i < sections.length; i++) {
+          // Extract the name and ID from the section header
+          var nameId = sections[i].match(/\[(\d+)\]/);
+          var name = sections[i].substr(0, nameId.index).trim();
+          var id = nameId[1];
+          
+          // Extract the stats from the section body
+          var strength = sections[i].match(/Strength: (\d+,?\d*)/)[1].replace(",", "");
+          var defense = sections[i].match(/Defense: (\d+,?\d*)/)[1].replace(",", "");
+          var speed = sections[i].match(/Speed: (\d+,?\d*)/)[1].replace(",", "");
+          var dexterity = sections[i].match(/Dexterity: (\d+,?\d*)/)[1].replace(",", "");
+          var total = sections[i].match(/Total: (\d+,?\d*)/)[1].replace(",", "");
+          
+          // Create a row of data for the current section
+          var rowData = [name + "[" + id + "]", strength, defense, speed, dexterity, total];
+          
+          // Add the row data to the table data
+          tableData.push(rowData);
+        }
+        
+        // Function to add commas as thousands separators
+        function numberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Create the HTML table from the parsed data
+        var tableHtml = "<table><thead><tr><th>Name[ID]</th><th>Strength</th><th>Defense</th><th>Speed</th><th>Dexterity</th><th>Total</th></tr></thead><tbody>";
+                
+        for (var i = 0; i < tableData.length; i++) {
+        tableHtml += "<tr>";
+                
+        for (var j = 0; j < tableData[i].length; j++) {
+            if (j === 0) {
+            // If this is the first column (i.e. Name[ID]), do not add commas
+            tableHtml += "<td>" + tableData[i][j] + "</td>";
+            } else {
+            // Otherwise, add commas to the number string
+            tableHtml += "<td>" + numberWithCommas(tableData[i][j]) + "</td>";
+            }
+        }
+                
+        tableHtml += "</tr>";
+        }
+                
+        tableHtml += "</tbody></table>";
+                
+        // Display the table HTML in the result element
+        document.getElementById("result").innerHTML = tableHtml;
+      }
+
+      function sortTable() {
+        // Get the table element
+        var table = document.querySelector("table");
+
+        // Get the rows of the table
+        var rows = Array.from(table.querySelectorAll("tr"));
+
+        // Sort the rows by the value in the Total column
+        rows.sort(function(a, b) {
+            var aTotal = parseInt(a.cells[5].textContent.replace(",", ""));
+            var bTotal = parseInt(b.cells[5].textContent.replace(",", ""));
+            return bTotal - aTotal;
+        });
+
+        // Reorder the rows in the table
+        for (var i = 0; i < rows.length; i++) {
+            table.appendChild(rows[i]);
+        }
+    }
+    </script>
+  </head>
+  <body>
+    <textarea id="data-input"></textarea>
+    <br>
+    <button onclick="parseData()">Submit</button>
+    <br><br>
+    <button onclick="sortTable()">Sort Table by Total</button>
+    <div id="result"></div>
+  </body>
+</html>
