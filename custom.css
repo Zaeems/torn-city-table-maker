@@ -1,24 +1,20 @@
 table {
-    border-collapse: collapse;
-    width: 100%;
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-    line-height: 1.5;
-    background-color: #d9d9d9;
+  border-collapse: collapse;
+  width: 100%;
+  font: 14px/1.5 Arial, sans-serif;
+  background-color: #d9d9d9;
 }
-
-th, td {
-    padding: 8px;
-    text-align: left;
-    vertical-align: middle;
-    border: 1px solid #cccccc;
+th,
+td {
+  padding: 8px;
+  text-align: left;
+  vertical-align: middle;
+  border: 1px solid #ccc;
 }
-
 th {
-    font-weight: bold;
-    background-color: #ffffff;
+  font-weight: bold;
+  background-color: #fff;
 }
-
 tr:nth-child(even) {
-    background-color: #f2f2f2;
+  background-color: #f2f2f2;
 }
