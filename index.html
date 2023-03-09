@@ -30,28 +30,42 @@
             
             // Extract the stats from the section body
             var strength = sections[i].match(/Strength: (\d+,?\d*)/)[1].replace(/,/g, "");
-            var defense = sections[i].match(/Defense: (\d+,?\d*)/)[1].replace(/,/g, "");
             var speed = sections[i].match(/Speed: (\d+,?\d*)/)[1].replace(/,/g, "");
             var dexterity = sections[i].match(/Dexterity: (\d+,?\d*)/)[1].replace(/,/g, "");
+            var defense = sections[i].match(/Defense: (\d+,?\d*)/)[1].replace(/,/g, "");
             var total = sections[i].match(/Total:\s*([\d,]+)/)[1].replace(/,/g, "");
-
-
+            var dexterity2 = speed * 14;
+            var defense2 = strength * 14;
             
             // Create a row of data for the current section
-            var rowData = [name + "[" + id + "]", strength, defense, speed, dexterity, total];
+            var rowData = [name + "[" + id + "]", strength, speed, dexterity, defense, total, dexterity2, defense2];
             
             // Add the row data to the table data
             tableData.push(rowData);
         }
         
         // Create the HTML table from the parsed data
-        var tableHtml = "<table><thead><tr><th>Name[ID]</th><th>Strength</th><th>Defense</th><th>Speed</th><th>Dexterity</th><th>Total</th></tr></thead><tbody>";
-                
+        var tableHtml = 
+        `<table>
+            <thead>
+                <tr>
+                    <th>Name[ID]</th>
+                    <th>Strength</th>
+                    <th>Speed</th>
+                    <th>Dexterity</th>
+                    <th>Defense</th>
+                    <th>Total</th>
+                    <th>Dexterity<br>(1 in 6 attacks hit you)</th>
+                    <th>Defense<br>(You take 0 damage)</th>
+                </tr>
+            </thead>
+        <tbody>`;
+        
         for (var i = 0; i < tableData.length; i++) {
         tableHtml += "<tr>";
             for (var j = 0; j < tableData[i].length; j++) {
                 if (j === 0) {
-                // If this is the first column (i.e. Name[ID]), do not add commas
+                // If this is the first or second column (i.e. Name[ID]), do not add commas
                 tableHtml += "<td>" + tableData[i][j] + "</td>";
                 } else {
                 // Otherwise, add commas to the number string
@@ -87,7 +101,9 @@
             var speed = parseInt(cells[3].innerText.replace(/,/g, ""));
             var dexterity = parseInt(cells[4].innerText.replace(/,/g, ""));
             var total = parseInt(cells[5].innerText.replace(/,/g, ""));
-            rowData.push({ name: name, id: id, strength: strength, defense: defense, speed: speed, dexterity: dexterity, total: total });
+            var dexterity2 = parseInt(cells[6].innerText.replace(/,/g, ""));
+            var defense2 = parseInt(cells[7].innerText.replace(/,/g, ""));
+            rowData.push({ name: name, id: id, strength: strength, defense: defense, speed: speed, dexterity: dexterity, total: total, dexterity2: dexterity2, defense2: defense2 });
         }
 
         // Sort the row data by total
@@ -119,6 +135,12 @@
             var totalCell = document.createElement("td");
             totalCell.innerText = numberWithCommas(rowData[i].total);
             row.appendChild(totalCell);
+            var dex2Cell = document.createElement("td");
+            dex2Cell.innerText = numberWithCommas(rowData[i].dexterity2);
+            row.appendChild(dex2Cell);
+            var def2Cell = document.createElement("td");
+            def2Cell.innerText = numberWithCommas(rowData[i].defense2);
+            row.appendChild(def2Cell);
             tbody.appendChild(row);
         }
 
