@@ -4,19 +4,27 @@
     <meta charset="UTF-8" />
     <title>Parse Data</title>
     <script src="script.js"></script>
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
     <link rel="stylesheet" href="custom.css" />
   </head>
   <body>
-    <textarea id="data-input"></textarea><br />
-    <button onclick="parseData()">Submit</button><br /><br />
-    <button onclick="sortTable()">Sort Table by Total</button>
-    <button onclick="exportTableToCSV()">Export (CSV)</button>
-
-    <br><br><label>Requires a Minimal Access API Key to export ready for YATA</label>
-    <br><input id="apikey"></input><br>
-    <br><button onclick="exportTableToYATA()">Export YATA (CSV)</button>
+    <label>Put your spy data in here</label>
+    <textarea placeholder="Name:Test [123456]&#10;Level:100&#10;Strength:2,000&#10;Speed:0&#10;Dexterity:1,000,000&#10;Defense:0&#10;Total:7,404,069,929" id="data-input"></textarea>
     
-    <br/><br/><label>All timestamps will be set at time of export</label><br/><br/>
+    <div>
+      <button onclick="parseData()">Submit</button>
+      <button onclick="sortTable()">Sort Table by Total</button>
+    </div>
+
+    <label>Requires a Minimal Access API Key to export ready for YATA</label>
+    <input id="apikey"></input>
+
+    <div>
+      <button onclick="exportTableToCSV()">Export (CSV)</button>
+      <button onclick="exportTableToYATA()">Export YATA (CSV)</button>
+    </div>
+
+    <label>All timestamps will be set at time of export</label>
     <div id="result"></div>
   </body>
 </html>
