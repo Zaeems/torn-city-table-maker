@@ -129,6 +129,29 @@ function sortTable() {
 
 function exportTableToCSV() {
   const filename = "export-" + new Date().toLocaleDateString() + ".csv";
+  const rows = document.querySelectorAll("table tr");
+
+  // Replace comma with empty string to avoid issues with numbers greater than 999
+  const sanitizeCell = (cell) => cell.innerText.replaceAll(",", "");
+
+  let csvContent = "data:text/csv;charset=utf-8,";
+
+  rows.forEach((row) => {
+    const rowData = Array.from(row.cells).map(sanitizeCell).join(",");
+    csvContent += rowData + "\r\n";
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", filename);
+  document.body.appendChild(link); // Required for FF
+
+  link.click(); // This will download the data file named "export-<date>.csv".
+}
+
+function exportTableToYATA() {
+  const filename = "export-" + new Date().toLocaleDateString() + ".csv";
   const table = document.querySelector("table");
   const rows = Array.from(table.tBodies[0].rows);
 
