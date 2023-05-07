@@ -151,6 +151,8 @@ function exportTableToCSV() {
 }
 
 function exportTableToYATA() {
+  const apiKey = document.getElementById("apikey").value;
+  
   const filename = "export-" + new Date().toLocaleDateString() + ".csv";
   const table = document.querySelector("table");
   const rows = Array.from(table.tBodies[0].rows);
@@ -177,24 +179,42 @@ function exportTableToYATA() {
     const defense_timestamp = Date.now()
     const dexterity_timestamp = Date.now()
     const total_timestamp = Date.now()
-    const target_faction_name = null
-    const target_faction_id = null
-    return {
-      id, name, target_faction_name, target_faction_id, strength, speed, dexterity, defense, total, strength_timestamp, speed_timestamp, defense_timestamp, dexterity_timestamp, total_timestamp,
-    };
+
+    return fetch(`https://api.torn.com/user/${id}?selections=profile&key=${apiKey}`)
+     .then(response => response.json())
+     .then(data => {
+      const faction = data.faction;
+      const factionId = faction ? faction.faction_id : null;
+      const factionName = faction ? faction.faction_name : null;
+      console.log("Target Faction ID:", factionId);
+      console.log("Target Faction Name:", factionName);
+
+      return {
+        id, name, factionName, factionId, strength, speed, dexterity, defense, total, strength_timestamp, speed_timestamp, defense_timestamp, dexterity_timestamp, total_timestamp,
+      };
+    })
+    .catch(error => {
+      throw error;
+    });
   });
 
-  rowData.forEach((row) => {
-    const values = Object.values(row);
-    const line = values.join(",");
-    csvContent += line + "\r\n";
-  });
+  Promise.all(rowData)
+  .then((rows) => {
+    rows.forEach((row) => {
+      const values = Object.values(row);
+      const line = values.join(",");
+      csvContent += line + "\r\n";
+    });
 
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", filename);
-  document.body.appendChild(link); // Required for FF
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", filename);
+    document.body.appendChild(link); // Required for FF
 
-  link.click(); // This will download the data file named "export-<date>.csv".
+    link.click(); // This will download the data file named "export-<date>.csv".
+  })
+  .catch(error => {
+    console.error(error);
+  })
 }
