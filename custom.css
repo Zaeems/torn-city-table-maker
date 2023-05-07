@@ -1,20 +1,6 @@
 table {
-  border-collapse: collapse;
-  width: 100%;
-  font: 14px/1.5 Arial, sans-serif;
-  background-color: #d9d9d9;
+    margin-left: -25%;
 }
-th,
-td {
-  padding: 8px;
-  text-align: left;
-  vertical-align: middle;
-  border: 1px solid #ccc;
-}
-th {
-  font-weight: bold;
-  background-color: #fff;
-}
-tr:nth-child(even) {
-  background-color: #f2f2f2;
+textarea {
+  min-height:200px;
 }
