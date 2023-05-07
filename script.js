@@ -25,12 +25,10 @@ function parseData() {
     const nameId = section.match(/\[(\d+)\]/);
     const name = section.substr(0, nameId.index).trim();
     const id = nameId[1];
-    const strength = section.match(/Strength: (\d+,?\d*)/)[1].replace(/,/g, "");
-    const speed = section.match(/Speed: (\d+,?\d*)/)[1].replace(/,/g, "");
-    const dexterity = section
-      .match(/Dexterity: (\d+,?\d*)/)[1]
-      .replace(/,/g, "");
-    const defense = section.match(/Defense: (\d+,?\d*)/)[1].replace(/,/g, "");
+    const strength = section.match(/Strength:\s*([\d,]+)/)[1].replace(/,/g, "");
+    const speed = section.match(/Speed:\s*([\d,]+)/)[1].replace(/,/g, "");
+    const dexterity = section.match(/Dexterity:\s*([\d,]+)/)[1].replace(/,/g, "");
+    const defense = section.match(/Defense:\s*([\d,]+)/)[1].replace(/,/g, "");
     const total = section.match(/Total:\s*([\d,]+)/)[1].replace(/,/g, "");
     const dexterity2 = speed * 14;
     const defense2 = strength * 14;
@@ -84,21 +82,25 @@ function parseData() {
 function sortTable() {
   const table = document.querySelector("table");
   const rows = Array.from(table.tBodies[0].rows);
+
+  const sanitizeCell = (cell) => cell.innerText.replaceAll(",", "");
+
   const rowData = rows.map((row) => {
     const cells = Array.from(row.cells);
     const nameId = cells[0].innerText.match(/\[(\d+)\]/);
     const name = cells[0].innerText.slice(0, nameId.index).trim();
     const id = nameId[1];
+    const strength = parseInt(sanitizeCell(cells[1]));
+    const speed = parseInt(sanitizeCell(cells[2])) || null;
+    const dexterity = parseInt(sanitizeCell(cells[3])) || null;
+    const defense = parseInt(sanitizeCell(cells[4])) || null;
+    const total = parseInt(sanitizeCell(cells[5])) || null;
+    const dexterity2 = parseInt(sanitizeCell(cells[6])) || null;
+    const defense2 = parseInt(sanitizeCell(cells[7])) || null;
     return {
       name: name,
       id: id,
-      strength: parseInt(cells[1].innerText.replaceAll(",", "")),
-      defense: parseInt(cells[2].innerText.replaceAll(",", "")),
-      speed: parseInt(cells[3].innerText.replaceAll(",", "")),
-      dexterity: parseInt(cells[4].innerText.replaceAll(",", "")),
-      total: parseInt(cells[5].innerText.replaceAll(",", "")),
-      dexterity2: parseInt(cells[6].innerText.replaceAll(",", "")),
-      defense2: parseInt(cells[7].innerText.replaceAll(",", "")),
+      strength, speed, dexterity, defense, total, dexterity2, defense2,
     };
   });
   rowData.sort((a, b) => b.total - a.total);
@@ -110,20 +112,14 @@ function sortTable() {
     nameCell.innerText = nameId;
     row.appendChild(nameCell);
     const strengthCell = createTableCell(rowData.strength);
-    const defenseCell = createTableCell(rowData.defense);
     const speedCell = createTableCell(rowData.speed);
     const dexterityCell = createTableCell(rowData.dexterity);
+    const defenseCell = createTableCell(rowData.defense);
     const totalCell = createTableCell(rowData.total);
     const dex2Cell = createTableCell(rowData.dexterity2);
     const def2Cell = createTableCell(rowData.defense2);
     row.append(
-      strengthCell,
-      defenseCell,
-      speedCell,
-      dexterityCell,
-      totalCell,
-      dex2Cell,
-      def2Cell
+      strengthCell, speedCell, dexterityCell, defenseCell, totalCell, dex2Cell, def2Cell
     );
     tbody.appendChild(row);
   });
@@ -133,16 +129,42 @@ function sortTable() {
 
 function exportTableToCSV() {
   const filename = "export-" + new Date().toLocaleDateString() + ".csv";
-  const rows = document.querySelectorAll("table tr");
+  const table = document.querySelector("table");
+  const rows = Array.from(table.tBodies[0].rows);
 
   // Replace comma with empty string to avoid issues with numbers greater than 999
   const sanitizeCell = (cell) => cell.innerText.replaceAll(",", "");
-
   let csvContent = "data:text/csv;charset=utf-8,";
 
-  rows.forEach((row) => {
-    const rowData = Array.from(row.cells).map(sanitizeCell).join(",");
-    csvContent += rowData + "\r\n";
+  // Add headers to CSV file
+  csvContent += "target_id,target_name,target_faction_name,target_faction_id,strength,speed,defense,dexterity,total,strength_timestamp,speed_timestamp,defense_timestamp,dexterity_timestamp,total_timestamp\r\n";
+
+  const rowData = rows.map((row) => {
+    const cells = Array.from(row.cells);
+    const nameId = cells[0].innerText.match(/\[(\d+)\]/);
+    const name = cells[0].innerText.slice(0, nameId.index).trim();
+    const id = nameId[1];
+    const strength = parseInt(sanitizeCell(cells[1]));
+    const speed = parseInt(sanitizeCell(cells[2])) || null;
+    const dexterity = parseInt(sanitizeCell(cells[3])) || null;
+    const defense = parseInt(sanitizeCell(cells[4])) || null;
+    const total = parseInt(sanitizeCell(cells[5])) || null;
+    const strength_timestamp = Date.now()
+    const speed_timestamp = Date.now()
+    const defense_timestamp = Date.now()
+    const dexterity_timestamp = Date.now()
+    const total_timestamp = Date.now()
+    const target_faction_name = null
+    const target_faction_id = null
+    return {
+      id, name, target_faction_name, target_faction_id, strength, speed, dexterity, defense, total, strength_timestamp, speed_timestamp, defense_timestamp, dexterity_timestamp, total_timestamp,
+    };
+  });
+
+  rowData.forEach((row) => {
+    const values = Object.values(row);
+    const line = values.join(",");
+    csvContent += line + "\r\n";
   });
 
   const encodedUri = encodeURI(csvContent);
