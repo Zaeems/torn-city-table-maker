@@ -1,39 +1,143 @@
-function numberWithCommas(x) { // give commas to numbers: 1000 becomes 1,000
+// util function
+const numberWithCommas = (x) => {
+  if (!x) {
+    return "N/A";
+  }
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
+};
 
-function replaceZerosWithNA() { // replace zeroes: 0 becomes N/A
-  var cells = document.getElementsByTagName("td");
-  for (var i = 0; i < cells.length; i++) {
-    if (cells[i].innerText === "0" || cells[i].innerText === "NaN") {
-      cells[i].innerText = "N/A";
+// util function
+function replaceZerosWithNA() {
+  const cells = document.querySelectorAll("td");
+  for (let i = 0; i < cells.length; i++) {
+    const cell = cells[i];
+    const cellText = cell.textContent;
+    if (cellText === "0" || cellText === "NaN") {
+      cell.textContent = "N/A";
     }
   }
 }
 
+// util function
 function createTableCell(value) {
   const cell = document.createElement("td");
-  cell.innerText = numberWithCommas(value);
+  cell.textContent = numberWithCommas(value);
   return cell;
 }
 
+// util function
+function generateFile(csvContent) {
+  const filename = "export-" + new Date().toLocaleDateString() + ".csv";
+  const encodedUri = encodeURI(csvContent);
+  let link = document.querySelector("#csv-download-link");
+  if (!link) {
+    link = document.createElement("a");
+    link.id = "csv-download-link";
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+  }
+  link.setAttribute("href", encodedUri);
+  link.click();
+}
+
+// Parses the input data and generates the table
 function parseData() {
-  const inputData = document.getElementById("data-input").value;
-  const sections = inputData.split("Name:");
-  sections.shift();
+  const [dataInput, resultDiv] = document.querySelectorAll(
+    "#data-input, #result"
+  );
+  const inputData = `x\n${dataInput.value}`;
+  const sections = inputData.split(/(?=\b\w+\s\[\d+\])/).slice(1);
+
+  const variables = {
+    strength: /Strength:\s*((?:[\d,]+)|N\/A)/,
+    speed: /Speed:\s*((?:[\d,]+)|N\/A)/,
+    dexterity: /Dexterity:\s*((?:[\d,]+)|N\/A)/,
+    defense: /Defense:\s*((?:[\d,]+)|N\/A)/,
+    total: /Total:\s*((?:[\d,]+)|N\/A)/,
+  };
+
   const tableData = sections.map((section) => {
-    const nameId = section.match(/\[(\d+)\]/);
-    const name = section.substr(0, nameId.index).trim();
-    const id = nameId[1];
-    const strength = section.match(/Strength:\s*([\d,]+)/)[1].replace(/,/g, "");
-    const speed = section.match(/Speed:\s*([\d,]+)/)[1].replace(/,/g, "");
-    const dexterity = section.match(/Dexterity:\s*([\d,]+)/)[1].replace(/,/g, "");
-    const defense = section.match(/Defense:\s*([\d,]+)/)[1].replace(/,/g, "");
-    const total = section.match(/Total:\s*([\d,]+)/)[1].replace(/,/g, "");
-    const dexterity2 = speed * 14;
-    const defense2 = strength * 14;
+    const [, name, id] = section.match(/^(.*)\[(\d+)\]/);
+
+    const result = Object.fromEntries(
+      Object.entries(variables).map(([name, regex]) => {
+        const matchResult = section.match(regex);
+        return [name, matchResult ? matchResult[1].replace(/,/g, "") : "0"];
+      })
+    );
+
+    const dexterity2 = result.speed * 14;
+    const defense2 = result.strength * 14;
+
     return [
-      name + "[" + id + "]",
+      `${name}[${id}]`,
+      result.strength,
+      result.speed,
+      result.dexterity,
+      result.defense,
+      result.total,
+      dexterity2,
+      defense2,
+    ];
+  });
+
+  const tableRows = tableData
+    .map(([name, ...rowData]) => {
+      const cells = rowData
+        .map((data) => `<td>${numberWithCommas(data)}</td>`)
+        .join("");
+      return `<tr><td>${name}</td>${cells}</tr>`;
+    })
+    .join("");
+
+  const tableHtml = `
+    <table>
+      <thead>
+        <tr>
+          <th>Name[ID]</th>
+          <th>Strength</th>
+          <th>Speed</th>
+          <th>Dexterity</th>
+          <th>Defense</th>
+          <th>Total</th>
+          <th>Dexterity (1 in 6 attacks hit you)</th>
+          <th>Defense (You take 0 damage)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tableRows}
+      </tbody>
+    </table>`;
+
+  resultDiv.innerHTML = tableHtml;
+  replaceZerosWithNA();
+}
+
+function sortTable() {
+  const table = document.querySelector("table");
+  const tbody = table.tBodies[0];
+  const rows = Array.from(tbody.rows);
+
+  const sanitizeCell = (cell) => {
+    const value = cell.textContent.replace(/,/g, "").trim();
+    if (value === "0" || value === "N/A" || value === "NaN") {
+      return null;
+    }
+    return parseInt(value);
+  };
+
+  const rowData = rows.map((row) => {
+    const cells = Array.from(row.cells);
+    const [, id] = cells[0].textContent.match(/\[(\d+)\]/);
+    const name = cells[0].textContent
+      .slice(0, cells[0].textContent.indexOf("["))
+      .trim();
+    const [strength, speed, dexterity, defense, total, dexterity2, defense2] =
+      Array.from({ length: 7 }, (_, i) => sanitizeCell(cells[i + 1]));
+
+    return {
+      name,
+      id,
       strength,
       speed,
       dexterity,
@@ -41,208 +145,114 @@ function parseData() {
       total,
       dexterity2,
       defense2,
-    ];
-  });
-
-  const tableHtml =
-    "<table>" +
-    "<thead><tr>" +
-    "<th>Name[ID]</th>" +
-    "<th>Strength</th>" +
-    "<th>Speed</th>" +
-    "<th>Dexterity</th>" +
-    "<th>Defense</th>" +
-    "<th>Total</th>" +
-    "<th>Dexterity (1 in 6 attacks hit you)</th>" +
-    "<th>Defense (You take 0 damage)</th>" +
-    "</tr></thead>" +
-    "<tbody>" +
-    tableData
-      .map((rowData) => {
-        return (
-          "<tr>" +
-          rowData
-            .map((data, i) => {
-              return i === 0
-                ? "<td>" + data + "</td>"
-                : "<td>" + numberWithCommas(data) + "</td>";
-            })
-            .join("") +
-          "</tr>"
-        );
-      })
-      .join("") +
-    "</tbody>" +
-    "</table>";
-
-  document.getElementById("result").innerHTML = tableHtml;
-  replaceZerosWithNA();
-}
-
-function sortTable() {
-  // create array of rows from table
-  const table = document.querySelector("table");
-  const rows = Array.from(table.tBodies[0].rows);
-
-  // function to remove commas from cell values
-  const sanitizeCell = (cell) => cell.innerText.replaceAll(",", "");
-
-  // map through rows to get cell data
-  const rowData = rows.map((row) => {
-    const cells = Array.from(row.cells);
-
-    // put cell data into individual variables
-    const nameId = cells[0].innerText.match(/\[(\d+)\]/);
-    const name = cells[0].innerText.slice(0, nameId.index).trim();
-    const id = nameId[1];
-    const strength = parseInt(sanitizeCell(cells[1]));
-    const speed = parseInt(sanitizeCell(cells[2])) || null;
-    const dexterity = parseInt(sanitizeCell(cells[3])) || null;
-    const defense = parseInt(sanitizeCell(cells[4])) || null;
-    const total = parseInt(sanitizeCell(cells[5])) || null;
-    const dexterity2 = parseInt(sanitizeCell(cells[6])) || null;
-    const defense2 = parseInt(sanitizeCell(cells[7])) || null;
-    return {
-      name: name,
-      id: id,
-      strength, speed, dexterity, defense, total, dexterity2, defense2,
     };
   });
-  // sort by total
-  rowData.sort((a, b) => b.total - a.total);
-  const tbody = document.createElement("tbody");
 
-  // create row using data
+  rowData.sort((a, b) => b.total - a.total);
+  tbody.innerHTML = "";
+
   rowData.forEach((rowData) => {
     const row = document.createElement("tr");
     const nameId = `${rowData.name}[${rowData.id}]`;
+    const link = document.createElement("a");
+
+    link.href = `https://www.torn.com/profiles.php?XID=${rowData.id}`;
+    link.target = "_blank";
+    link.textContent = nameId;
+
     const nameCell = document.createElement("td");
-    nameCell.innerText = nameId;
+    nameCell.appendChild(link);
     row.appendChild(nameCell);
-    const strengthCell = createTableCell(rowData.strength);
-    const speedCell = createTableCell(rowData.speed);
-    const dexterityCell = createTableCell(rowData.dexterity);
-    const defenseCell = createTableCell(rowData.defense);
-    const totalCell = createTableCell(rowData.total);
-    const dex2Cell = createTableCell(rowData.dexterity2);
-    const def2Cell = createTableCell(rowData.defense2);
-    row.append(
-      strengthCell, speedCell, dexterityCell, defenseCell, totalCell, dex2Cell, def2Cell
-    );
+
+    const properties = [
+      "strength",
+      "speed",
+      "dexterity",
+      "defense",
+      "total",
+      "dexterity2",
+      "defense2",
+    ];
+    properties.forEach((property) => {
+      row.appendChild(createTableCell(rowData[property]));
+    });
+
     tbody.appendChild(row);
   });
-  table.replaceChild(tbody, table.tBodies[0]);
   replaceZerosWithNA();
 }
 
+// Exports the table data to a CSV file
 function exportTableToCSV() {
-  // function to remove commas from cell values
-  const sanitizeCell = (cell) => cell.innerText.replaceAll(",", "");
+  const sanitizeCell = (cell) => cell.textContent.replaceAll(",", "");
 
-  // Create filename for csv based on current date
-  const filename = "export-" + new Date().toLocaleDateString() + ".csv";
-  // Create file header
   let csvContent = "data:text/csv;charset=utf-8,";
   csvContent += "Column 1,Column 2,Column 3\r\n";
 
-  // get all rows from the table
   const rows = document.querySelectorAll("table tr");
-  // Loop through each row, sanitize each cell, then join the cell values with commas to create a row of CSV data
-  rows.forEach((row) => {
-    const rowData = Array.from(row.cells).map(sanitizeCell).join(",");
-    csvContent += rowData + "\r\n";
-  });
+  const rowData = Array.from(rows).map((row) =>
+    Array.from(row.cells).map(sanitizeCell).join(",")
+  );
+  csvContent += rowData.join("\r\n");
 
-  // Create link element to download CSV file
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", filename);
-  document.body.appendChild(link); // (required for Firefox)
-  link.click(); // Trigger download of CSV file
+  generateFile(csvContent);
 }
 
-
-function exportTableToYATA() {
-  // Get API key
+// Exports the table data to YATA with API key used to fetch Faction info
+async function exportTableToYATA() {
   const apiKey = document.getElementById("apikey").value;
-  // function to remove commas from cell values
-  const sanitizeCell = (cell) => cell.innerText.replaceAll(",", "");
+  const sanitizeCell = (cell) => cell.textContent.replaceAll(",", "");
 
-  // create array of rows from table
   const table = document.querySelector("table");
   const rows = Array.from(table.tBodies[0].rows);
 
-  // map through rows to get cell data
-  const rowData = rows.map((row) => {
-    const cells = Array.from(row.cells);
-    // put cell data into individual variables + create timestamps
-    const nameId = cells[0].innerText.match(/\[(\d+)\]/);
-    const name = cells[0].innerText.slice(0, nameId.index).trim();
-    const id = nameId[1];
-    const strength = parseInt(sanitizeCell(cells[1]));
-    const speed = parseInt(sanitizeCell(cells[2])) || null;
-    const dexterity = parseInt(sanitizeCell(cells[3])) || null;
-    const defense = parseInt(sanitizeCell(cells[4])) || null;
-    const total = parseInt(sanitizeCell(cells[5])) || null;
-    const strength_timestamp = Date.now()
-    const speed_timestamp = Date.now()
-    const defense_timestamp = Date.now()
-    const dexterity_timestamp = Date.now()
-    const total_timestamp = Date.now()
+  const rowDataPromises = rows.map(async (row) => {
+    const [nameId, strength, speed, dexterity, defense, total] = Array.from(
+      row.cells,
+      sanitizeCell
+    );
+    const nameMatch = nameId.match(/\[(\d+)\]/);
+    const name = nameMatch ? nameId.slice(0, nameMatch.index).trim() : nameId;
+    const id = nameMatch ? nameMatch[1] : null;
 
-    // fetch faction name and faction ID for this user
-    return fetch(`https://api.torn.com/user/${id}?selections=profile&key=${apiKey}`)
-     .then(response => response.json())
-     .then(data => {
+    const [response] = await Promise.allSettled([
+      fetch(`https://api.torn.com/user/${id}?selections=profile&key=${apiKey}`),
+      new Promise((resolve) => setTimeout(resolve, 100)), // Introduce a delay of 100 milliseconds for each API request
+    ]);
+
+    if (response.status === "fulfilled") {
+      const data = await response.value.json();
       const faction = data.faction;
       const factionId = faction ? faction.faction_id : null;
       const factionName = faction ? faction.faction_name : null;
-      
-      // debugging
-      //console.log("Data:"); console.log(data);
-      //console.log("Player ID:", id);
-      //console.log("API Key:", apiKey);
-      //console.log("Faction ID:", factionId);
-      //console.log("Faction Name:", factionName);
 
-      // Return target and faction data
       return {
-        id, name, factionName, factionId, strength, speed, dexterity, defense, total, strength_timestamp, speed_timestamp, defense_timestamp, dexterity_timestamp, total_timestamp,
+        id,
+        name,
+        factionName,
+        factionId,
+        strength: parseInt(strength) || null,
+        speed: parseInt(speed) || null,
+        dexterity: parseInt(dexterity) || null,
+        defense: parseInt(defense) || null,
+        total: parseInt(total) || null,
+        timestamp: Math.floor(Date.now() / 1000),
       };
-    })
-    // Catch any errors thrown during API call
-    .catch(error => {
-      throw error;
-    });
+    } else {
+      throw new Error(response.reason);
+    }
   });
 
-  // Create filename for csv based on current date
-  const filename = "export-" + new Date().toLocaleDateString() + ".csv";
-  // Create file header
+  const rowData = await Promise.all(rowDataPromises);
+
   let csvContent = "data:text/csv;charset=utf-8,";
-  csvContent += "target_id,target_name,target_faction_name,target_faction_id,strength,speed,defense,dexterity,total,strength_timestamp,speed_timestamp,defense_timestamp,dexterity_timestamp,total_timestamp\r\n";
+  csvContent +=
+    "target_id,target_name,target_faction_name,target_faction_id,strength,speed,defense,dexterity,total,timestamp\r\n";
 
-  // Wait for API calls to resolve
-  Promise.all(rowData)
-  .then((rows) => {
-    // Populate CSV file with data
-    rows.forEach((row) => {
-      const values = Object.values(row);
-      const line = values.join(",");
-      csvContent += line + "\r\n";
-    });
+  rowData.forEach((row) => {
+    const line = Object.values(row).join(",");
+    csvContent += line + "\r\n";
+  });
 
-    // Create link element to download CSV file
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", filename);
-    document.body.appendChild(link); // Required for Firefox
-    link.click(); // Trigger download of CSV file
-  })
-  // Catch any errors thrown
-  .catch(error => {
-    console.error(error);
-  })
+  generateFile(csvContent);
 }

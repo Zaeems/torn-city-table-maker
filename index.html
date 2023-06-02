@@ -5,14 +5,36 @@
     <title>Parse Data</title>
     <script src="script.js"></script>
     <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
-    <link rel="stylesheet" href="custom.css" />
+    <style>
+    textarea {
+      min-height:200px;
+    }
+    </style>
+    <script>
+      // store the user's API key locally and display it onload
+      function storeInput() {
+        var input = document.getElementById('apikey').value;
+        localStorage.setItem('previousInput', input);
+      }
+  
+      function displayPreviousInput() {
+        var previousInput = localStorage.getItem('previousInput');
+        if (previousInput) {
+          document.getElementById('apikey').value = previousInput;
+        }
+      }
+
+      window.onload = function() {
+        displayPreviousInput();
+      };
+    </script>
   </head>
   <body>
     <label>Put your spy data in here</label>
     <textarea placeholder="Name:Test [123456]&#10;Level:100&#10;Strength:2,000&#10;Speed:0&#10;Dexterity:1,000,000&#10;Defense:0&#10;Total:7,404,069,929" id="data-input"></textarea>
     
     <div>
-      <button onclick="parseData()">Submit</button>
+      <button onclick="storeInput(); parseData()">Submit</button>
       <button onclick="sortTable()">Sort Table by Total</button>
     </div>
 
@@ -21,7 +43,7 @@
 
     <div>
       <button onclick="exportTableToCSV()">Export (CSV)</button>
-      <button onclick="exportTableToYATA()">Export YATA (CSV)</button>
+      <button onclick="storeInput(); exportTableToYATA()">Export YATA (CSV)</button>
     </div>
 
     <label>All timestamps will be set at time of export</label>
