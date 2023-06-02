@@ -22,7 +22,8 @@ function createTableCell(value) {
 
 function parseData() {
   const inputData = document.getElementById("data-input").value;
-  const sections = inputData.split("Name:");
+  const sections = inputData.split(/(?=\b\w+\s\[\d+\])/);
+  console.debug(sections);
   sections.shift();
   const tableData = sections.map((section) => {
     const nameId = section.match(/\[(\d+)\]/);
@@ -189,7 +190,7 @@ function exportTableToYATA() {
     const nameId = cells[0].innerText.match(/\[(\d+)\]/);
     const name = cells[0].innerText.slice(0, nameId.index).trim();
     const id = nameId[1];
-    const strength = parseInt(sanitizeCell(cells[1]));
+    const strength = parseInt(sanitizeCell(cells[1])) || null;
     const speed = parseInt(sanitizeCell(cells[2])) || null;
     const dexterity = parseInt(sanitizeCell(cells[3])) || null;
     const defense = parseInt(sanitizeCell(cells[4])) || null;
