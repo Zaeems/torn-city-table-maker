@@ -1,4 +1,7 @@
 function numberWithCommas(x) { // give commas to numbers: 1000 becomes 1,000
+  if (x === null) {
+    return "N/A";
+  }
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
@@ -85,7 +88,13 @@ function sortTable() {
   const rows = Array.from(table.tBodies[0].rows);
 
   // function to remove commas from cell values
-  const sanitizeCell = (cell) => cell.innerText.replaceAll(",", "");
+  const sanitizeCell = (cell) => {
+    const value = cell.innerText.replaceAll(",", "").trim();
+    if (value === "0" || value === "N/A" || value === "NaN") {
+      return null;
+    }
+    return parseInt(value);
+  };
 
   // map through rows to get cell data
   const rowData = rows.map((row) => {
