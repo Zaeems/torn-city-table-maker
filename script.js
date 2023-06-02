@@ -144,8 +144,16 @@ function sortTable() {
     const row = document.createElement("tr");
     const nameId = `${rowData.name}[${rowData.id}]`;
     const nameCell = document.createElement("td");
-    nameCell.innerText = nameId;
+
+    // also hyperlink to user profile
+    const link = document.createElement("a");
+    link.href = `https://www.torn.com/profiles.php?XID=${rowData.id}`; 
+    link.target = "_blank"
+    const linkText = document.createTextNode(nameId);
+    link.appendChild(linkText);
+    nameCell.appendChild(link);
     row.appendChild(nameCell);
+
     const strengthCell = createTableCell(rowData.strength);
     const speedCell = createTableCell(rowData.speed);
     const dexterityCell = createTableCell(rowData.dexterity);

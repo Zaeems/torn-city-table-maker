@@ -9,14 +9,33 @@
     textarea {
       min-height:200px;
     }
-    </style
+    </style>
+    <script>
+      // Function to store the user's input
+      function storeInput() {
+        var input = document.getElementById('apikey').value; // Get the input value
+        localStorage.setItem('previousInput', input); // Store the input in local storage
+      }
+  
+      // Function to retrieve and display the previous input
+      function displayPreviousInput() {
+        var previousInput = localStorage.getItem('previousInput'); // Retrieve the previous input from local storage
+        if (previousInput) {
+          document.getElementById('apikey').value = previousInput; // Set the input field value
+        }
+      }
+
+      window.onload = function() {
+        displayPreviousInput();
+      };
+    </script>
   </head>
   <body>
     <label>Put your spy data in here</label>
     <textarea placeholder="Name:Test [123456]&#10;Level:100&#10;Strength:2,000&#10;Speed:0&#10;Dexterity:1,000,000&#10;Defense:0&#10;Total:7,404,069,929" id="data-input"></textarea>
     
     <div>
-      <button onclick="parseData()">Submit</button>
+      <button onclick="storeInput(); parseData()">Submit</button>
       <button onclick="sortTable()">Sort Table by Total</button>
     </div>
 
