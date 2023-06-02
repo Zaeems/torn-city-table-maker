@@ -21,19 +21,36 @@ function createTableCell(value) {
 }
 
 function parseData() {
-  const inputData = document.getElementById("data-input").value;
+  var inputData = document.getElementById("data-input").value;
+  inputData = 'x\n' + inputData;
   const sections = inputData.split(/(?=\b\w+\s\[\d+\])/);
-  console.debug(sections);
   sections.shift();
   const tableData = sections.map((section) => {
     const nameId = section.match(/\[(\d+)\]/);
     const name = section.substr(0, nameId.index).trim();
     const id = nameId[1];
-    const strength = section.match(/Strength:\s*([\d,]+)/)[1].replace(/,/g, "");
-    const speed = section.match(/Speed:\s*([\d,]+)/)[1].replace(/,/g, "");
-    const dexterity = section.match(/Dexterity:\s*([\d,]+)/)[1].replace(/,/g, "");
-    const defense = section.match(/Defense:\s*([\d,]+)/)[1].replace(/,/g, "");
-    const total = section.match(/Total:\s*([\d,]+)/)[1].replace(/,/g, "");
+
+    const variables = [
+    { name: "strength", regex: /Strength:\s*((?:[\d,]+)|N\/A)/ },
+    { name: "speed", regex: /Speed:\s*((?:[\d,]+)|N\/A)/ },
+    { name: "dexterity", regex: /Dexterity:\s*((?:[\d,]+)|N\/A)/ },
+    { name: "defense", regex: /Defense:\s*((?:[\d,]+)|N\/A)/ },
+    { name: "total", regex: /Total:\s*((?:[\d,]+)|N\/A)/ }
+    ];
+
+    const result = {};
+
+    for (const { name, regex } of variables) {
+      const matchResult = section.match(regex);
+      result[name] = matchResult ? matchResult[1].replace(/,/g, "") : "0";
+    }
+
+    const strength = result.strength;
+    const speed = result.speed;
+    const dexterity = result.dexterity;
+    const defense = result.defense;
+    const total = result.total;
+    
     const dexterity2 = speed * 14;
     const defense2 = strength * 14;
     return [
@@ -195,12 +212,12 @@ function exportTableToYATA() {
     const dexterity = parseInt(sanitizeCell(cells[3])) || null;
     const defense = parseInt(sanitizeCell(cells[4])) || null;
     const total = parseInt(sanitizeCell(cells[5])) || null;
-    const strength_timestamp = Date.now()
-    const speed_timestamp = Date.now()
-    const defense_timestamp = Date.now()
-    const dexterity_timestamp = Date.now()
-    const total_timestamp = Date.now()
-
+    const strength_timestamp = Math.floor(Date.now() / 1000);
+    const speed_timestamp = Math.floor(Date.now() / 1000);
+    const defense_timestamp = Math.floor(Date.now() / 1000);
+    const dexterity_timestamp = Math.floor(Date.now() / 1000);
+    const total_timestamp = Math.floor(Date.now() / 1000);
+    
     // fetch faction name and faction ID for this user
     return fetch(`https://api.torn.com/user/${id}?selections=profile&key=${apiKey}`)
      .then(response => response.json())
