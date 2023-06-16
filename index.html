@@ -10,6 +10,9 @@
     textarea {
       min-height:200px;
     }
+    progress::-webkit-progress-bar {
+      background-color: var(--bg);
+    }
     </style>
     <script>
       // store the user's API key locally and display it onload
@@ -44,10 +47,16 @@
 
     <div>
       <button onclick="exportTableToCSV()">Export (CSV)</button>
-      <button onclick="storeInput(); exportTableToYATA()">Export YATA (CSV)</button>
+      <button onclick="storeInput(); showProgress(); exportTableToYATA()">Export YATA (CSV)</button>
+    </div>
+    <label>All timestamps will be set at time of export</label>
+
+    <div id="progress-bar"> <br/>
+      <!-- empty -->
     </div>
 
-    <label>All timestamps will be set at time of export</label>
-    <div id="result"></div>
+    <div id="result">
+      <!-- empty -->
+    </div>
   </body>
 </html>

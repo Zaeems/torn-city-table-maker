@@ -40,7 +40,7 @@ function generateFile(csvContent) {
   link.click();
 }
 
-// Parses the input data and generates the table
+// Parse input and generate table
 function parseData() {
   const [dataInput, resultDiv] = document.querySelectorAll(
     "#data-input, #result"
@@ -110,7 +110,7 @@ function parseData() {
     </table>`;
 
   resultDiv.innerHTML = tableHtml;
-  replaceZerosWithNA();
+  sortTable();
 }
 
 function sortTable() {
@@ -206,6 +206,10 @@ async function exportTableToYATA() {
   const table = document.querySelector("table");
   const rows = Array.from(table.tBodies[0].rows);
 
+  const progressBar = document.getElementById('progress');
+  const progressText = document.getElementById('progress-text');
+  let fulfilledRequests = 0;
+
   const rowDataPromises = rows.map(async (row) => {
     const [nameId, strength, speed, dexterity, defense, total] = Array.from(
       row.cells,
@@ -214,10 +218,11 @@ async function exportTableToYATA() {
     const nameMatch = nameId.match(/\[(\d+)\]/);
     const name = nameMatch ? nameId.slice(0, nameMatch.index).trim() : nameId;
     const id = nameMatch ? nameMatch[1] : null;
+    const length = rows.length;
 
     const [response] = await Promise.allSettled([
       fetch(`https://api.torn.com/user/${id}?selections=profile&key=${apiKey}`),
-      new Promise((resolve) => setTimeout(resolve, 100)), // Introduce a delay of 100 milliseconds for each API request
+      new Promise((resolve) => setTimeout(resolve, 100)), // 100 milliseconds delay for each API request
     ]);
 
     if (response.status === "fulfilled") {
@@ -225,6 +230,11 @@ async function exportTableToYATA() {
       const faction = data.faction;
       const factionId = faction ? faction.faction_id : null;
       const factionName = faction ? faction.faction_name : null;
+
+      fulfilledRequests++;
+      const progress = (fulfilledRequests / rows.length) * 100;
+      progressBar.value = progress;
+      progressText.textContent = (`${fulfilledRequests} / ${length}`)
 
       return {
         id,
@@ -255,4 +265,31 @@ async function exportTableToYATA() {
   });
 
   generateFile(csvContent);
+}
+
+function showProgress() {
+  var progressTextSpan = document.getElementById("progress-text");
+  var progressBar = document.getElementById("progress");
+  var progressBarDiv = document.getElementById("progress-bar")
+
+  if (progressTextSpan && progressBar) {
+    // Elements already exist, reset their values
+    progressTextSpan.textContent = "";
+    progressBar.value = 0;
+  } else {
+    var progressSpan = document.createElement("span");
+    progressSpan.textContent = "Progress: ";
+
+    var progressTextSpan = document.createElement("span");
+    progressTextSpan.id = "progress-text";
+    progressSpan.appendChild(progressTextSpan);
+
+    var progressBar = document.createElement("progress");
+    progressBar.id = "progress";
+    progressBar.value = 0;
+    progressBar.max = 100;
+
+    progressBarDiv.appendChild(progressSpan);
+    progressBarDiv.appendChild(progressBar);
+  }
 }
