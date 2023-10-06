@@ -2,12 +2,16 @@
 <html>
   <head>
     <meta charset="UTF-8" />
+    <meta name="google-site-verification" content="S66L_T0VGoKZeQ7TmQ_PekpK8S4oP0WKoeyI05Q1vYQ" />
     <title>Parse Data</title>
     <script src="script.js"></script>
     <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
     <style>
     textarea {
       min-height:200px;
+    }
+    progress::-webkit-progress-bar {
+      background-color: var(--bg);
     }
     </style>
     <script>
@@ -43,10 +47,16 @@
 
     <div>
       <button onclick="exportTableToCSV()">Export (CSV)</button>
-      <button onclick="storeInput(); exportTableToYATA()">Export YATA (CSV)</button>
+      <button onclick="storeInput(); showProgress(); exportTableToYATA()">Export YATA (CSV)</button>
+    </div>
+    <label>All timestamps will be set at time of export</label>
+
+    <div id="progress-bar"> <br/>
+      <!-- empty -->
     </div>
 
-    <label>All timestamps will be set at time of export</label>
-    <div id="result"></div>
+    <div id="result">
+      <!-- empty -->
+    </div>
   </body>
 </html>
