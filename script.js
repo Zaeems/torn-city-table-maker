@@ -187,8 +187,6 @@ function exportTableToCSV() {
   const sanitizeCell = (cell) => cell.textContent.replaceAll(",", "");
 
   let csvContent = "data:text/csv;charset=utf-8,";
-  csvContent += "Column 1,Column 2,Column 3\r\n";
-
   const rows = document.querySelectorAll("table tr");
   const rowData = Array.from(rows).map((row) =>
     Array.from(row.cells).map(sanitizeCell).join(",")
