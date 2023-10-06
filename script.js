@@ -200,8 +200,7 @@ function exportTableToCSV() {
 async function exportTableToYATA() {
   const apiKey = document.getElementById("apikey").value;
   const sanitizeCell = (cell) => cell.textContent.replaceAll(",", "");
-  const timestamp = Math.floor(Date.now() / 1000);
-
+  
   const table = document.querySelector("table");
   const rows = Array.from(table.tBodies[0].rows);
 
@@ -229,6 +228,11 @@ async function exportTableToYATA() {
       const faction = data.faction;
       const factionId = faction ? faction.faction_id : null;
       const factionName = faction ? faction.faction_name : null;
+      const strength_timestamp = Math.floor(Date.now() / 1000);
+      const speed_timestamp = Math.floor(Date.now() / 1000);
+      const defense_timestamp = Math.floor(Date.now() / 1000);
+      const dexterity_timestamp = Math.floor(Date.now() / 1000);
+      const total_timestamp = Math.floor(Date.now() / 1000);
 
       fulfilledRequests++;
       const progress = (fulfilledRequests / rows.length) * 100;
@@ -240,11 +244,16 @@ async function exportTableToYATA() {
         name,
         factionName,
         factionId,
-        strength: parseInt(strength) || null, timestamp,
-        speed: parseInt(speed) || null, timestamp,
-        dexterity: parseInt(dexterity) || null, timestamp,
-        defense: parseInt(defense) || null, timestamp,
-        total: parseInt(total) || null, timestamp,
+        strength: parseInt(strength) || null, 
+        speed: parseInt(speed) || null, 
+        defense: parseInt(defense) || null, 
+        dexterity: parseInt(dexterity) || null, 
+        total: parseInt(total) || null, 
+        strength_timestamp,
+        speed_timestamp,
+        defense_timestamp,
+        dexterity_timestamp,
+        total_timestamp,
       };
     } else {
       throw new Error(response.reason);
