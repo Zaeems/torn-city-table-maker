@@ -40,7 +40,7 @@ function generateFile(csvContent) {
   link.click();
 }
 
-// Parses the input data and generates the table
+// Parse input and generate table
 function parseData() {
   const [dataInput, resultDiv] = document.querySelectorAll(
     "#data-input, #result"
@@ -110,7 +110,7 @@ function parseData() {
     </table>`;
 
   resultDiv.innerHTML = tableHtml;
-  replaceZerosWithNA();
+  sortTable();
 }
 
 function sortTable() {
@@ -187,8 +187,6 @@ function exportTableToCSV() {
   const sanitizeCell = (cell) => cell.textContent.replaceAll(",", "");
 
   let csvContent = "data:text/csv;charset=utf-8,";
-  csvContent += "Column 1,Column 2,Column 3\r\n";
-
   const rows = document.querySelectorAll("table tr");
   const rowData = Array.from(rows).map((row) =>
     Array.from(row.cells).map(sanitizeCell).join(",")
@@ -202,9 +200,13 @@ function exportTableToCSV() {
 async function exportTableToYATA() {
   const apiKey = document.getElementById("apikey").value;
   const sanitizeCell = (cell) => cell.textContent.replaceAll(",", "");
-
+  
   const table = document.querySelector("table");
   const rows = Array.from(table.tBodies[0].rows);
+
+  const progressBar = document.getElementById('progress');
+  const progressText = document.getElementById('progress-text');
+  let fulfilledRequests = 0;
 
   const rowDataPromises = rows.map(async (row) => {
     const [nameId, strength, speed, dexterity, defense, total] = Array.from(
@@ -214,10 +216,11 @@ async function exportTableToYATA() {
     const nameMatch = nameId.match(/\[(\d+)\]/);
     const name = nameMatch ? nameId.slice(0, nameMatch.index).trim() : nameId;
     const id = nameMatch ? nameMatch[1] : null;
+    const length = rows.length;
 
     const [response] = await Promise.allSettled([
       fetch(`https://api.torn.com/user/${id}?selections=profile&key=${apiKey}`),
-      new Promise((resolve) => setTimeout(resolve, 100)), // Introduce a delay of 100 milliseconds for each API request
+      new Promise((resolve) => setTimeout(resolve, 100)), // 100 milliseconds delay for each API request
     ]);
 
     if (response.status === "fulfilled") {
@@ -225,18 +228,32 @@ async function exportTableToYATA() {
       const faction = data.faction;
       const factionId = faction ? faction.faction_id : null;
       const factionName = faction ? faction.faction_name : null;
+      const strength_timestamp = Math.floor(Date.now() / 1000);
+      const speed_timestamp = Math.floor(Date.now() / 1000);
+      const defense_timestamp = Math.floor(Date.now() / 1000);
+      const dexterity_timestamp = Math.floor(Date.now() / 1000);
+      const total_timestamp = Math.floor(Date.now() / 1000);
 
+      fulfilledRequests++;
+      const progress = (fulfilledRequests / rows.length) * 100;
+      progressBar.value = progress;
+      progressText.textContent = (`${fulfilledRequests} / ${length}`)
+      
       return {
         id,
         name,
         factionName,
         factionId,
-        strength: parseInt(strength) || null,
-        speed: parseInt(speed) || null,
-        dexterity: parseInt(dexterity) || null,
-        defense: parseInt(defense) || null,
-        total: parseInt(total) || null,
-        timestamp: Math.floor(Date.now() / 1000),
+        strength: parseInt(strength) || null, 
+        speed: parseInt(speed) || null, 
+        defense: parseInt(defense) || null, 
+        dexterity: parseInt(dexterity) || null, 
+        total: parseInt(total) || null, 
+        strength_timestamp,
+        speed_timestamp,
+        defense_timestamp,
+        dexterity_timestamp,
+        total_timestamp,
       };
     } else {
       throw new Error(response.reason);
@@ -247,12 +264,38 @@ async function exportTableToYATA() {
 
   let csvContent = "data:text/csv;charset=utf-8,";
   csvContent +=
-    "target_id,target_name,target_faction_name,target_faction_id,strength,speed,defense,dexterity,total,timestamp\r\n";
-
+    "target_id,target_name,target_faction_name,target_faction_id,strength,speed,defense,dexterity,total,strength_timestamp,speed_timestamp,defense_timestamp,dexterity_timestamp,total_timestamp\r\n";
   rowData.forEach((row) => {
     const line = Object.values(row).join(",");
     csvContent += line + "\r\n";
   });
 
   generateFile(csvContent);
+}
+
+function showProgress() {
+  var progressTextSpan = document.getElementById("progress-text");
+  var progressBar = document.getElementById("progress");
+  var progressBarDiv = document.getElementById("progress-bar")
+
+  if (progressTextSpan && progressBar) {
+    // Elements already exist, reset their values
+    progressTextSpan.textContent = "";
+    progressBar.value = 0;
+  } else {
+    var progressSpan = document.createElement("span");
+    progressSpan.textContent = "Progress: ";
+
+    var progressTextSpan = document.createElement("span");
+    progressTextSpan.id = "progress-text";
+    progressSpan.appendChild(progressTextSpan);
+
+    var progressBar = document.createElement("progress");
+    progressBar.id = "progress";
+    progressBar.value = 0;
+    progressBar.max = 100;
+
+    progressBarDiv.appendChild(progressSpan);
+    progressBarDiv.appendChild(progressBar);
+  }
 }
